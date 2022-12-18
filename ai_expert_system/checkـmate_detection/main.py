@@ -1,6 +1,29 @@
+from board import Board
+from player import Player
 
 def main(state):
-    pass
+    board = Board(state=state)
+
+    palyer_white = Player(board_size=board.board_size, player_state=board.player_white_state)
+    palyer_black = Player(board_size=board.board_size, player_state=board.player_black_state)
+
+    # check if white player "check" balck player 
+    is_check = palyer_white.is_check(palyer_black)
+    print("is_check", is_check)
+
+    # check if balck player "check" white player 
+    is_check = palyer_black.is_check(palyer_white)
+    print("is_check", is_check)
+
+    # check if white player "mate" balck player 
+    is_check = palyer_white.is_mate(palyer_black)
+    print("is_check", is_check)
+
+    # check if balck player "mate" white player 
+    is_check = palyer_black.is_mate(palyer_white)
+    print("is_check", is_check)
+
+
 
 
 if __name__ == "__main__":
@@ -42,8 +65,8 @@ if __name__ == "__main__":
     palyer_black["king"] = ('d',1)
 
     state = {}
-    state["palyer_white"] = palyer_white
-    state["palyer_black"] = palyer_black
+    state["player_white"] = palyer_white
+    state["player_black"] = palyer_black
     state["board_size"] = (8,8)
 
     main(state)
