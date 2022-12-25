@@ -239,8 +239,7 @@ for symbol in kingsymbol:
     while True:
         check_count = is_check_rook(board, check_count, symbol)
         check_count_all = check_count
-        if check_count_all > 2:
-              break
+     
         
         check_count = is_check_pawn(board, check_count, start_mood, symbol)
         check_count_all += check_count
