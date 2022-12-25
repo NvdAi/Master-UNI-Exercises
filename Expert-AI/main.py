@@ -234,15 +234,33 @@ def is_check_queen(board, check_count, symbol):
 
 for symbol in kingsymbol:
     print("=======================")
-    check_count = is_check_rook(board, check_count, symbol)
-    
-    check_count = is_check_pawn(board, check_count, start_mood, symbol)
-    
-    check_count = is_check_knight(board, check_count, symbol)
-    
-    check_count = is_check_bishop(board, check_count, symbol)
-    
-    check_count = is_check_queen(board, check_count, symbol)
+
+    check_count_all = 0
+    while True:
+        check_count = is_check_rook(board, check_count, symbol)
+        check_count_all = check_count
+        if check_count_all > 2:
+              break
+        
+        check_count = is_check_pawn(board, check_count, start_mood, symbol)
+        check_count_all += check_count
+        if check_count_all > 2:
+              break
+        
+        check_count = is_check_knight(board, check_count, symbol)
+        check_count_all += check_count
+        if check_count_all > 2:
+              break
+        
+        check_count = is_check_bishop(board, check_count, symbol)
+        check_count_all += check_count
+        if check_count_all > 2:
+              break
+        
+        check_count = is_check_queen(board, check_count, symbol)
+        check_count_all += check_count
+        if check_count_all > 2:
+              break
 
     print(check_count)
     check_count=0
