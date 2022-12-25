@@ -1,109 +1,136 @@
 import numpy as np
+from itertools import groupby
 
-
-                                    # stat with black nuts
-board = np.array([    ['0' , '0' , '0' , '0' , '0' , '0' , '0' , '0'],
-                      ['K' , '0' , '0' , '0' , '0' , '0' , 'R' , '0'],
-                      ['0' , 'p' , '0' , '0' , '0' , '0' , '0' , '0'],
-                      ['0' , '0' , '0' , '0' , '0' , '0' , '0' , '0'],
-                      ['r' , '0' , '0' , '0' , '0' , '0' , 'k' , '0'],
+                                    # start with black nuts
+board = np.array([    ['0' , 'b1' , '0' , '0' , 'q' , '0' , '0' , '0'],
                       ['0' , '0' , '0' , '0' , '0' , '0' , '0' , '0'],
                       ['0' , '0' , '0' , '0' , '0' , '0' , '0' , '0'],
+                      ['0' , '0' , 'p' , '0' , 'K' , '0' , 'r' , '0'],
+                      ['0' , '0' , '0' , '0' , '0' , 'p' , '0' , '0'],
+                      ['0' , '0' , '0' , 'kn' , 'p' , '0' , '0' , '0'],
+                      ['0' , '0' , '0' , '0' , 'r' , '0' , '0' , '0'],
                       ['0' , '0' , '0' , '0' , '0' , '0' , '0' , '0']],  dtype=object)
-                                    # stat with white nuts
+                                    # start with white nuts
 print(board)
 
-# different checks that should be check  
-    # check by rook   on rows and cols
-    # check by queen  on rows and cols and diameters
-    # check by bishop on diameters
-    # check by knight on a L 
-    # check by pawn   on diameters; if distance ==1
 
 kingsymbol = ["K","k"]
 start_mood = (1,0)  # frist item is black start mood and secend itrm is white start mood (0 is down 1 is top)
 check_count = 0 
 
-def is_check_rook(board, check_count, symbol):
 
-    sid = ["row","column"]
+def check_on_diagonals(board, check_count, symbol, checker_symbols, massage):
+
+    diags = [board[::-1,:].diagonal(i) for i in range(-board.shape[0]+1, board.shape[1])]
+    diags.extend(board.diagonal(i) for i in range(board.shape[1]-1,-board.shape[0],-1))
+    all_diags = [n.tolist() for n in diags]
+
+    for checker_symbol in checker_symbols:
+        for diag in all_diags:
+
+            if (symbol in diag) and (checker_symbol in diag):
+                kinx = diag.index(symbol)
+                checker_index = diag.index(checker_symbol)
+
+                if kinx > checker_index:
+                    if diag[kinx-1]== checker_symbol:
+                        print(massage,checker_symbol)
+                        check_count +=1 
+                    elif groupby(diag[checker_index+1:kinx]) and ("0" in diag[checker_index+1:kinx] ):
+                        print(massage,checker_symbol)
+                        check_count +=1 
+                else:
+                    if diag[kinx+1]== checker_symbol:
+                        print(massage,checker_symbol)
+                        check_count +=1 
+                    elif groupby(diag[kinx+1:checker_index]) and ("0" in diag[kinx+1:checker_index] ):
+                        print(massage,checker_symbol)
+                        check_count +=1 
+    return check_count
+
+def check_on_rowcols(board, check_count, symbol, checker_symbol, massage):
+
+    sid = ["on row","on col"]
     for counter,i in  enumerate(sid):  # checking for row and col
         king_indx = np.where(board == symbol)
         row = board[king_indx[0]]
-
-        if counter==1:
+        if counter == 1:
             row = board[: ,king_indx[1]]
             row = np.reshape(board[: ,king_indx[1]],(1,8))
 
-        if symbol == "K":
-            rook_symbol = "r"
-        else:
-            rook_symbol = "R"
-
-        rook_indx = np.where(row == rook_symbol )
+        rook_indx = np.where(row == checker_symbol)
+        rook_num = len(rook_indx[1])
         king_indx = np.where(row == symbol)
 
-        L = len(rook_indx[0])
-        if  L == 0:
-            print("we dont have rook in",i)
+        if rook_num == 0:
+            pass
+        elif (rook_num == 1) and (rook_indx[1][0] < king_indx[1][0]):
+            if row[king_indx[0][0]][king_indx[1][0]-1] == checker_symbol:
+                check_count+=1
+                print(massage,i)
+            else:
+                dist = row[:,rook_indx[1][0]+1 : king_indx[1][0]].flatten()
+                ln_dist = len(set(dist))
+                if (ln_dist==1) and ("0" in dist):
+                    check_count+=1
+                    print(massage,i)
 
-        elif L == 1 and king_indx[1][0] < rook_indx[1][0]:
-            # print("rook in right on ",i)
-            dist = row[:,king_indx[1][0] : rook_indx[1][0]]
-            s = list(set(dist.flatten()))
-            ln = len(set(dist.flatten()))
+        elif (rook_num == 1) and (rook_indx[1][0] > king_indx[1][0]):
+            if row[king_indx[0][0]][king_indx[1][0]+1] == checker_symbol:
+                check_count+=1
+                print(massage,i)
+            else:
+                dist = row[:,king_indx[1][0]+1 : rook_indx[1][0]].flatten()
+                ln_dist = len(set(dist))
+                if (ln_dist==1) and ("0" in dist):
+                    check_count+=1
+                    print(massage,i)
 
-            if (ln == 1) or  ( (ln == 2) and (s == ["0",symbol])) or ((ln == 2) and (s == [symbol,"0"])):
-                print("WE HAVE CHECK By ROOK on",i)
-                check_count +=1
-                
+        elif (rook_num == 2) and (max(rook_indx[1]) < king_indx[1][0]):
+            if row[king_indx[0][0]][king_indx[1][0]-1] == checker_symbol:
+                check_count+=1
+                print(massage,i)
+            else:
+                dist = row[:,max(rook_indx[1])+1 : king_indx[1][0]].flatten()
+                ln_dist = len(set(dist))
+                if (ln_dist==1) and ("0" in dist):
+                    check_count+=1
+                    print(massage,i)
 
-        elif L == 1 and rook_indx[1][0] < king_indx[1][0]:
-            # print("rook in left on",i)
-            dist = row[:,rook_indx[1][0] : king_indx[1][0]]
-            s = list(set(dist.flatten()))
-            ln = len(set(dist.flatten()))
-            if (ln == 1) or ( (ln == 2) and (s == ["0",rook_symbol])) or ((ln == 2) and (s == [rook_symbol,"0"])) :
-                print("WE HAVE CHECK By ROOK on",i)
-                check_count +=1
-                
-
-        elif (L==2 ) and (max(rook_indx[1]) <  king_indx[1][0]):
-            # print("we have tow rook in left on ",i)
-            dist = row[:,rook_indx[1][1] : king_indx[1][0]]
-            ln = len(set(dist.flatten()))
-            s = list(set(dist.flatten()))
-            if (ln == 1) or ( (ln == 2) and (s == ["0", rook_symbol ])) or ((ln == 2) and (s == [rook_symbol,"0"])):
-                print("WE HAVE CHECK By closer ROOK on ",i)
-                check_count +=1
-
-
-        elif (L==2) and (king_indx[1][0] < min(rook_indx[1])) :
-            # print("we have tow rook in right on",i)
-            dist = row[:,king_indx[1][0] : rook_indx[1][0]]
-            s = list(set(dist.flatten()))
-            ln = len(set(dist.flatten()))
-            if (ln == 1) or  ( (ln == 2) and (s == ["0",symbol])) or ((ln == 2) and (s == [symbol,"0"])):
-                print("WE HAVE CHECK By ROOK on",i)
-                check_count +=1
-
-        elif (L==2) and (min(rook_indx[1]) < king_indx[1][0] < max(rook_indx[1])) :
-            # print("we have two rook left and right on",i)
-            dist = row[:,rook_indx[1][0] : king_indx[1][0]]
-            s = list(set(dist.flatten())) 
-            ln = len(set(dist.flatten()))
-            if (ln == 1) or  ( (ln == 2) and (s == ["0",rook_symbol])) or ((ln == 2) and (s == [rook_symbol,"0"])):
-                print("WE HAVE CHECK By  left ROOK on",i)
-                check_count +=1
-
-            dist = row[:, king_indx[1][0]:rook_indx[1][1]]
-            s = list(set(dist.flatten()))    
-            ln = len(set(dist.flatten()))
-            if (ln == 1) or  ( (ln == 2) and (s == ["0",symbol])) or ((ln == 2) and (s == [symbol,"0"])) :
-                print("WE HAVE CHECK By right ROOK on",i)
-                check_count +=1
+        elif (rook_num == 2) and (min(rook_indx[1]) > king_indx[1][0]):
+            if row[king_indx[0][0]][king_indx[1][0]+1] == checker_symbol:
+                check_count+=1
+                print(massage,i)
+            else:
+                dist = row[:,king_indx[1][0]+1 : min(rook_indx[1])].flatten()
+                ln_dist = len(set(dist))
+                if (ln_dist==1) and ("0" in dist):
+                    check_count+=1
+                    print(massage,i)
+        
+        elif (rook_num == 2) and (min(rook_indx[1]) < king_indx[1][0] < max(rook_indx[1])):
+            left = row[:,min(rook_indx[1]) : king_indx[1][0]].flatten()
+            ln_left = len(set(left))
+            if (ln_left == 1) or (ln_left==2  and "0" in left):
+                check_count+=1
+                print(massage,i)
+            right = row[:,king_indx[1][0] : max(rook_indx[1])].flatten()
+            ln_right = len(set(right))
+            if (ln_right == 1) or (ln_right==2  and "0" in right):
+                check_count+=1
+                print(massage,i) 
     return check_count
 
+
+def is_check_rook(board, check_count, symbol):
+    if symbol == "K" :
+        rook_symbol = "r"
+        massage = "black king checked by white rook "
+    else:
+        rook_symbol = "R"
+        massage = "Wihte king checked by black rook " 
+    check_count = check_on_rowcols(board, check_count, symbol, rook_symbol, massage)
+    return check_count  
 
 def is_check_pawn(board, check_count, start_mood, symbol ):
     if symbol == "K":
@@ -151,10 +178,72 @@ def is_check_pawn(board, check_count, start_mood, symbol ):
         print(king_color ," dont have check by ", pawn_color )
     return check_count
 
-for symbol in kingsymbol:
-    print("is check on",symbol)
-    check_count = is_check_rook(board, check_count, symbol)
+def is_check_knight(board, check_count, symbol):
 
+    if symbol == "K":
+        knight_symbol = "kn"
+        massage = "Black king checked by white knight"
+    else :
+        knight_symbol = "KN"
+        massage = "White king checked by black knight"
+
+
+    new_board = np.pad(board, 2)
+    king_indx = np.where(new_board == symbol)
+    i,j = (king_indx[0][0], king_indx[1][0])
+
+    rectangle_1 = new_board[i-2:i+3 , j-1:j+2]
+    rectangle_2 = new_board[i-1:i+2 , j-2:j+3]
+
+    corners_indx = np.ix_((0, -1), (0,-1))
+    corners_1 = rectangle_1[corners_indx]
+    corners_2 = rectangle_2[corners_indx]
+    all_corners = np.concatenate((corners_1, corners_2), axis=0)
+    knight_indx = np.where(all_corners == knight_symbol)
+
+    if len(knight_indx[0]) == 0:
+        pass
+    else:
+        print(massage)
+        check_count +=1
+    return check_count
+
+def is_check_bishop(board, check_count, symbol):
+    if symbol == "K" :
+        bishop_symbol = ("b1","b2")
+        massage = "black king checked by white bishop "
+    else:
+        bishop_symbol = ("B1","B2")
+        massage = "Wihte king checked by black bishop "   
+        
+    check_count = check_on_diagonals(board, check_count, symbol, bishop_symbol, massage)
+    return check_count
+
+def is_check_queen(board, check_count, symbol):
+    if symbol == "K" :
+        queen_symbol = ("q")
+        massage = "black king checked by white queen "
+    else:
+        queen_symbol = ("Q")
+        massage = "white king checked by black queen "  
+
+    check_count = check_on_diagonals(board, check_count, symbol, queen_symbol, massage)
+    check_count = check_on_rowcols(board, check_count, symbol, queen_symbol, massage)    
+    return check_count
+
+
+for symbol in kingsymbol:
+    print("=======================")
+    check_count = is_check_rook(board, check_count, symbol)
+    
     check_count = is_check_pawn(board, check_count, start_mood, symbol)
+    
+    check_count = is_check_knight(board, check_count, symbol)
+    
+    check_count = is_check_bishop(board, check_count, symbol)
+    
+    check_count = is_check_queen(board, check_count, symbol)
+
     print(check_count)
     check_count=0
+    qq
